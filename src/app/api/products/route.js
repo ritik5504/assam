@@ -1,88 +1,60 @@
 import { NextResponse } from "next/server";
-import { getUserFromRequest } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const MOCK_PRODUCTS = [
-  {
-    id: "mock-1",
-    name: "Hydrochloric Acid 37% ACS",
-    description: "Reagent grade hydrochloric acid suitable for titration and inorganic synthesis.",
-    sku: "CHEM-HCL-37",
-    dimension: "Liquid",
-    basePrice: 24.50,
-    stockQuantity: 45.0,
-    baseUnit: "L",
-    image: null,
-  },
-  {
-    id: "mock-2",
-    name: "Sodium Hydroxide Pellets",
-    description: "Anhydrous NaOH pellets, suitable for pH adjustment and general laboratory use.",
-    sku: "CHEM-NAOH-PL",
-    dimension: "Solid",
-    basePrice: 18.20,
-    stockQuantity: 30.0,
-    baseUnit: "kg",
-    image: null,
-  },
-  {
-    id: "mock-3",
-    name: "Ethanol 99% Absolute",
-    description: "Pure dehydrated ethanol, ACS reagent grade for extraction and sterilization.",
-    sku: "CHEM-ETOH-99",
-    dimension: "Liquid",
-    basePrice: 35.00,
-    stockQuantity: 15.5,
-    baseUnit: "L",
-    image: null,
-  },
-  {
-    id: "mock-4",
-    name: "Acetone ACS Grade",
-    description: "Highly pure acetone solvent, suitable for clearing and organic reactions.",
-    sku: "CHEM-ACET-ACS",
-    dimension: "Liquid",
-    basePrice: 22.00,
-    stockQuantity: 0.0,
-    baseUnit: "L",
-    image: null,
-  }
-];
-
-export async function GET(request) {
+/**
+ * GET /api/products
+ *
+ * Public endpoint — any authenticated or unauthenticated user can browse products.
+ * No role restriction: users need to see products to place orders.
+ */
+export async function GET() {
   try {
     const products = await prisma.product.findMany({
       orderBy: { createdAt: "desc" },
     });
-    if (products.length === 0) {
-      return NextResponse.json(MOCK_PRODUCTS);
-    }
     return NextResponse.json(products);
   } catch (error) {
-    console.error("Prisma error in GET products, falling back to mock data:", error);
-    return NextResponse.json(MOCK_PRODUCTS);
+    console.error("Error fetching products:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch products" },
+      { status: 500 }
+    );
   }
 }
 
+/**
+ * POST /api/products
+ *
+ * ADMIN-ONLY — Create a new chemical product in the inventory.
+ *
+ * Security: requireAdmin() checks:
+ *   1. Valid JWT token (authenticated) → else 401
+ *   2. role === "ADMIN"               → else 403 Forbidden
+ *
+ * Standard users will receive 403 Forbidden and cannot create products.
+ */
 export async function POST(request) {
-  const userSession = getUserFromRequest(request);
-  
-  if (!userSession || userSession.role !== "ADMIN") { // Check in uppercase
-    return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
-  }
+  // ── Authorization guard ─────────────────────────────────────────────────
+  const { user, error } = requireAdmin(request);
+  if (error) return error; // 401 or 403 depending on auth state
 
   let body = {};
   try {
     body = await request.json();
-  } catch (err) {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   const { name, description, sku, dimension, basePrice, stockQuantity, baseUnit, image } = body;
+
   if (!name || !sku || !dimension || basePrice === undefined || stockQuantity === undefined || !baseUnit) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing required fields: name, sku, dimension, basePrice, stockQuantity, baseUnit" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -95,44 +67,56 @@ export async function POST(request) {
         basePrice: parseFloat(basePrice),
         stockQuantity: parseFloat(stockQuantity),
         baseUnit,
-        image
+        image: image || null,
       },
     });
 
     return NextResponse.json(product, { status: 201 });
-  } catch (error) {
-    console.error("Error creating product, falling back to mock success:", error);
-    return NextResponse.json({
-      id: "mock-product-" + Math.floor(Math.random() * 10000),
-      name,
-      description,
-      sku,
-      dimension,
-      basePrice,
-      stockQuantity,
-      baseUnit,
-      image,
-    }, { status: 201 });
+  } catch (dbError) {
+    console.error("Error creating product:", dbError);
+
+    // Handle unique constraint violation (duplicate SKU)
+    if (dbError.code === "P2002") {
+      return NextResponse.json(
+        { error: "A product with this SKU already exists" },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Failed to create product" },
+      { status: 500 }
+    );
   }
 }
 
+/**
+ * PUT /api/products
+ *
+ * ADMIN-ONLY — Update an existing chemical product.
+ *
+ * Security: Same requireAdmin() guard as POST.
+ * Standard users receive 403 Forbidden.
+ */
 export async function PUT(request) {
-  const userSession = getUserFromRequest(request);
-  
-  if (!userSession || userSession.role !== "ADMIN") { // Check in uppercase
-    return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
-  }
+  // ── Authorization guard ─────────────────────────────────────────────────
+  const { user, error } = requireAdmin(request);
+  if (error) return error;
 
   let body = {};
   try {
     body = await request.json();
-  } catch (err) {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   const { id, name, description, sku, dimension, basePrice, stockQuantity, baseUnit, image } = body;
+
   if (!id || !name || !sku || !dimension || basePrice === undefined || stockQuantity === undefined || !baseUnit) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing required fields: id, name, sku, dimension, basePrice, stockQuantity, baseUnit" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -146,53 +130,67 @@ export async function PUT(request) {
         basePrice: parseFloat(basePrice),
         stockQuantity: parseFloat(stockQuantity),
         baseUnit,
-        image
+        image: image || null,
       },
     });
 
     return NextResponse.json(product);
-  } catch (error) {
-    console.error("Error updating product, falling back to mock success:", error);
-    return NextResponse.json({
-      id,
-      name,
-      description,
-      sku,
-      dimension,
-      basePrice,
-      stockQuantity,
-      baseUnit,
-      image
-    });
+  } catch (dbError) {
+    console.error("Error updating product:", dbError);
+
+    if (dbError.code === "P2025") {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+    if (dbError.code === "P2002") {
+      return NextResponse.json(
+        { error: "A product with this SKU already exists" },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Failed to update product" },
+      { status: 500 }
+    );
   }
 }
 
+/**
+ * DELETE /api/products?id=<productId>
+ *
+ * ADMIN-ONLY — Permanently delete a product from the inventory.
+ *
+ * Security: Same requireAdmin() guard.
+ * Standard users receive 403 Forbidden.
+ */
 export async function DELETE(request) {
-  const userSession = getUserFromRequest(request);
-  
-  if (!userSession || userSession.role !== "ADMIN") { // Check in uppercase
-    return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
+  // ── Authorization guard ─────────────────────────────────────────────────
+  const { user, error } = requireAdmin(request);
+  if (error) return error;
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json(
+      { error: "Missing product ID in query string" },
+      { status: 400 }
+    );
   }
 
   try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    await prisma.product.delete({ where: { id } });
+    return NextResponse.json({ success: true, message: "Product deleted" });
+  } catch (dbError) {
+    console.error("Error deleting product:", dbError);
 
-    if (!id) {
-      return NextResponse.json({ error: "Missing product ID" }, { status: 400 });
+    if (dbError.code === "P2025") {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    if (id.startsWith("mock-")) {
-      return NextResponse.json({ success: true, message: "Mock deleted" });
-    }
-
-    await prisma.product.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error deleting product, falling back to mock success:", error);
-    return NextResponse.json({ success: true, message: "Deleted mock fallback" });
+    return NextResponse.json(
+      { error: "Failed to delete product" },
+      { status: 500 }
+    );
   }
 }
