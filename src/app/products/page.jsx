@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import ProductCard from '@/components/ProductCard';
-import { formatCurrency, convertToBase, getDisplayValues, formatINR } from '@/lib/conversions';
+import { formatCurrency, convertToBase, getDisplayValues } from '@/lib/conversions';
 import { useRouter } from 'next/navigation';
 
 export default function ProductsPage() {
@@ -282,7 +282,7 @@ export default function ProductsPage() {
                         <div>
                           <p className="font-semibold text-zinc-900 dark:text-white leading-tight">{item.product.name}</p>
                           <p className="text-xs text-zinc-400 dark:text-zinc-550 mt-1">
-                            {formatCurrency(unitPrice)} ({formatINR(unitPrice)}) / {item.unit}
+                            {formatCurrency(unitPrice)} / {item.unit}
                           </p>
                         </div>
                         <button
@@ -316,29 +316,36 @@ export default function ProductsPage() {
                         ) : (
                           <span className="text-xs text-zinc-400 font-medium px-1 capitalize">{item.unit}</span>
                         )}
-                        <div className="ml-auto text-right">
-                          <div className="font-bold text-zinc-900 dark:text-zinc-50 text-sm">
-                            {formatCurrency(getCartItemCost(item))}
+                        <span className="ml-auto font-bold text-zinc-900 dark:text-zinc-50 text-sm">
+                          {formatCurrency(getCartItemCost(item))}
+                        </span>
+                      </div>
+
+                      {/* Unit Conversion Preview */}
+                      {item.unit !== item.product.baseUnit && (
+                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-950/40 p-2.5 rounded-xl space-y-1 mt-1 border border-zinc-100 dark:border-zinc-800">
+                          <div className="flex justify-between">
+                            <span className="text-zinc-400">Converted Quantity:</span>
+                            <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+                              {convertToBase(parseFloat(item.quantity) || 0, item.unit).quantity} {item.product.baseUnit}
+                            </span>
                           </div>
-                          <div className="text-[10px] text-zinc-450 dark:text-zinc-500 font-semibold">
-                            {formatINR(getCartItemCost(item))}
+                          <div className="flex justify-between">
+                            <span className="text-zinc-400">Total Price:</span>
+                            <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+                              {formatCurrency(getCartItemCost(item))}
+                            </span>
                           </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
 
-              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 space-y-1">
-                <div className="flex items-center justify-between text-base font-bold text-zinc-900 dark:text-white">
-                  <span>Total</span>
-                  <span>{formatCurrency(cartTotal)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm font-semibold text-zinc-500 dark:text-zinc-400">
-                  <span>Total (INR)</span>
-                  <span>{formatINR(cartTotal)}</span>
-                </div>
+              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 flex items-center justify-between text-base font-bold text-zinc-900 dark:text-white">
+                <span>Total</span>
+                <span>{formatCurrency(cartTotal)}</span>
               </div>
 
               <button

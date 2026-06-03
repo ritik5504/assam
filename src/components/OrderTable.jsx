@@ -1,15 +1,18 @@
 import React from 'react';
-import { formatCurrency, formatDate, convertFromBase, formatINR } from '../lib/conversions';
+import { formatCurrency, formatDate, convertFromBase } from '../lib/conversions';
+import Link from 'next/link';
 
 export default function OrderTable({ orders, onUpdateStatus }) {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'completed':
-      case 'approved':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50';
+      case 'approved':
+        return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/50';
       case 'pending':
         return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/50';
       case 'cancelled':
+      case 'rejected':
         return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900/50';
       default:
         return 'bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-900 dark:text-zinc-400 dark:border-zinc-800';
@@ -38,8 +41,13 @@ export default function OrderTable({ orders, onUpdateStatus }) {
                   key={order.id}
                   className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30 transition-colors duration-150"
                 >
-                  <td className="px-6 py-4 font-mono text-xs text-zinc-400 dark:text-zinc-500">
-                    {order.id.slice(0, 8)}...
+                  <td className="px-6 py-4 font-mono text-xs">
+                    <Link
+                      href={`/orders/${order.id}`}
+                      className="text-indigo-650 hover:text-indigo-500 font-semibold hover:underline cursor-pointer"
+                    >
+                      {order.id.slice(0, 8)}...
+                    </Link>
                   </td>
                   <td className="px-6 py-4">
                     <div className="font-medium text-zinc-900 dark:text-zinc-100">
@@ -94,29 +102,43 @@ export default function OrderTable({ orders, onUpdateStatus }) {
                     <div className="font-semibold text-zinc-900 dark:text-zinc-50">
                       {formatCurrency(order.totalAmount)}
                     </div>
-                    <div className="text-[11px] text-zinc-450 dark:text-zinc-500 font-semibold font-mono mt-0.5">
-                      {formatINR(order.totalAmount)}
-                    </div>
                   </td>
                   {onUpdateStatus && (
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        {order.status?.toLowerCase() === 'pending' ? (
+                        {order.status?.toLowerCase() === 'pending' && (
                           <>
                             <button
                               onClick={() => onUpdateStatus(order.id, 'APPROVED')}
                               className="text-xs font-semibold text-emerald-650 hover:text-emerald-500 dark:text-emerald-400 cursor-pointer px-2.5 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-900/35 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all duration-150"
                             >
-                              Accept
+                              Approve
                             </button>
                             <button
-                              onClick={() => onUpdateStatus(order.id, 'CANCELLED')}
+                              onClick={() => onUpdateStatus(order.id, 'REJECTED')}
                               className="text-xs font-semibold text-rose-650 hover:text-rose-500 dark:text-rose-450 cursor-pointer px-2.5 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/35 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all duration-150"
                             >
-                              Cancel
+                              Reject
                             </button>
                           </>
-                        ) : (
+                        )}
+                        {order.status?.toLowerCase() === 'approved' && (
+                          <>
+                            <button
+                              onClick={() => onUpdateStatus(order.id, 'COMPLETED')}
+                              className="text-xs font-semibold text-indigo-650 hover:text-indigo-500 dark:text-indigo-400 cursor-pointer px-2.5 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-900/35 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition-all duration-150"
+                            >
+                              Mark as Completed
+                            </button>
+                            <button
+                              onClick={() => onUpdateStatus(order.id, 'REJECTED')}
+                              className="text-xs font-semibold text-rose-650 hover:text-rose-500 dark:text-rose-450 cursor-pointer px-2.5 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/35 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all duration-150"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        {['completed', 'rejected', 'cancelled'].includes(order.status?.toLowerCase()) && (
                           <span className="text-xs text-zinc-405 dark:text-zinc-550 italic font-medium">Finalized</span>
                         )}
                       </div>

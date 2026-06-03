@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatCurrency, convertToBase, getDisplayValues, formatINR } from '@/lib/conversions';
+import { formatCurrency, convertToBase, getDisplayValues } from '@/lib/conversions';
 
 export default function AdminProductsPage() {
   const router = useRouter();
@@ -87,7 +87,7 @@ export default function AdminProductsPage() {
       // Convert user inputs to database base units (g, mL, item)
       const base = convertToBase(parseFloat(inputStock), inputUnit);
       const factor = base.quantity / parseFloat(inputStock);
-      const basePriceVal = parseFloat(inputPrice) / factor;
+      const basePriceVal = (parseFloat(inputPrice) / 83.0) / factor;
 
       const response = await fetch('/api/products', {
         method: 'POST',
@@ -134,7 +134,7 @@ export default function AdminProductsPage() {
     setEditDescription(product.description || '');
     setEditSku(product.sku || '');
     setEditDimension(product.dimension || 'Solid');
-    setEditInputPrice(display.displayPrice.toString());
+    setEditInputPrice((display.displayPrice * 83.0).toFixed(2));
     setEditInputStock(display.displayQuantity.toString());
     setEditInputUnit(display.displayUnit);
     setEditImage(product.image || '');
@@ -151,7 +151,7 @@ export default function AdminProductsPage() {
       // Convert user edits back to database base units (g, mL, item)
       const base = convertToBase(parseFloat(editInputStock), editInputUnit);
       const factor = base.quantity / parseFloat(editInputStock);
-      const basePriceVal = parseFloat(editInputPrice) / factor;
+      const basePriceVal = (parseFloat(editInputPrice) / 83.0) / factor;
 
       const response = await fetch('/api/products', {
         method: 'PUT',
@@ -351,14 +351,14 @@ export default function AdminProductsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Price (USD) per Unit</label>
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Price (₹) per Unit</label>
                 <input
                   type="number"
                   step="0.01"
                   required
                   value={inputPrice}
                   onChange={(e) => setInputPrice(e.target.value)}
-                  placeholder="24.99"
+                  placeholder="1999.00"
                   className="mt-1 block w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-2.5 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm transition-all duration-200"
                 />
               </div>
@@ -449,9 +449,6 @@ export default function AdminProductsPage() {
                         <td className="px-6 py-4 text-right">
                           <div className="font-medium text-zinc-900 dark:text-zinc-50">
                             {formatCurrency(display.displayPrice)} <span className="text-xs text-zinc-400 font-normal">/ {display.displayUnit}</span>
-                          </div>
-                          <div className="text-[11px] text-zinc-450 dark:text-zinc-500 font-semibold font-mono mt-0.5">
-                            {formatINR(display.displayPrice)} <span className="text-[9px] text-zinc-400 font-normal font-sans">/ {display.displayUnit}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center">
@@ -566,7 +563,7 @@ export default function AdminProductsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Price (USD) per Unit</label>
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Price (₹) per Unit</label>
                 <input
                   type="number"
                   step="0.01"

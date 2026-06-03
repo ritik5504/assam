@@ -192,18 +192,6 @@ export async function POST(request) {
         },
       });
 
-      // 4. Decrement stock for each item
-      for (const item of items) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: {
-            stockQuantity: {
-              decrement: parseFloat(item.quantity)
-            }
-          }
-        });
-      }
-
       return newOrder;
     });
 

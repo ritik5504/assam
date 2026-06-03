@@ -107,10 +107,12 @@ export function getDisplayValues(baseQuantity, basePricePerUnit, baseUnit) {
  * @returns {string}
  */
 export function formatCurrency(value) {
-  return new Intl.NumberFormat('en-US', {
+  const inrValue = parseFloat(value) * 83.0; // Conversion rate: 1 USD = 83 INR
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD',
-  }).format(value);
+    currency: 'INR',
+    maximumFractionDigits: 2,
+  }).format(inrValue);
 }
 
 /**

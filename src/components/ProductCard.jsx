@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency, getDisplayValues, formatINR } from '../lib/conversions';
+import { formatCurrency, getDisplayValues } from '../lib/conversions';
 
 export default function ProductCard({ product, onAddToCart }) {
   const { name, description, basePrice, stockQuantity, baseUnit, image } = product;
@@ -52,9 +52,6 @@ export default function ProductCard({ product, onAddToCart }) {
             <div className="flex flex-wrap items-baseline gap-1.5">
               <span className="text-xl font-bold text-zinc-900 dark:text-zinc-55">
                 {formatCurrency(display.displayPrice)}
-              </span>
-              <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
-                ({formatINR(display.displayPrice)})
               </span>
               <span className="text-xs font-normal text-zinc-400 dark:text-zinc-500"> / {display.displayUnit}</span>
             </div>
