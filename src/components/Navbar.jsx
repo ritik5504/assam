@@ -164,8 +164,8 @@ export default function Navbar() {
 
         {/* Mobile Drawer Menu */}
         <div
-          className={`fixed top-16 bottom-0 left-0 w-64 bg-white border-r border-zinc-200 shadow-xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
-            mobileMenuOpen ? 'translate-x-0' : '-translate-x-0 -translate-x-full'
+          className={`fixed top-16 bottom-0 left-0 w-72 bg-white border-r border-zinc-200 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
+            mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
           {/* Navigation Links */}

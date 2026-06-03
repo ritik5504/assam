@@ -181,7 +181,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 flex-1 w-full flex flex-col md:flex-row gap-8 animate-fade-in">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex-1 w-full flex flex-col lg:flex-row gap-8 animate-fade-in">
       {/* Products Grid */}
       <div className="flex-1 space-y-6">
         <div>
@@ -256,8 +256,8 @@ export default function ProductsPage() {
       </div>
 
       {/* Cart Sidebar */}
-      <div className="w-full md:w-[360px] flex-shrink-0">
-        <div className="sticky top-24 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm space-y-6">
+      <div className="w-full lg:w-[360px] flex-shrink-0">
+        <div className="sticky top-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm space-y-6">
           <h2 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center justify-between">
             Shopping Cart
             {cart.length > 0 && (

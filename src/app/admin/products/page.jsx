@@ -224,7 +224,7 @@ export default function AdminProductsPage() {
 
       {/* Tabs */}
       <div className="border-b border-zinc-200 dark:border-zinc-800">
-        <nav className="-mb-px flex space-x-8">
+        <nav className="-mb-px flex flex-wrap gap-x-6 gap-y-0">
           <button
             onClick={() => {
               setActiveTab('add-product');
@@ -405,7 +405,63 @@ export default function AdminProductsPage() {
 
       {activeTab === 'manage-products' && (
         <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm animate-fade-in">
-          <div className="overflow-x-auto">
+
+          {/* ── Mobile Card View ── */}
+          <div className="md:hidden divide-y divide-zinc-100 dark:divide-zinc-800">
+            {loadingProducts ? (
+              <div className="p-8 text-center">
+                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent"></div>
+              </div>
+            ) : products.length > 0 ? (
+              products.map((product) => {
+                const display = getDisplayValues(product.stockQuantity, product.basePrice, product.baseUnit);
+                const isOutOfStock = parseFloat(product.stockQuantity) <= 0;
+                return (
+                  <div key={product.id} className="p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">{product.name}</div>
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {product.sku && (
+                            <span className="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 text-xs font-mono font-medium text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-600/10">
+                              {product.sku}
+                            </span>
+                          )}
+                          {product.dimension && (
+                            <span className="inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                              {product.dimension}
+                            </span>
+                          )}
+                        </div>
+                        {product.description && (
+                          <div className="text-xs text-zinc-400 truncate mt-1 max-w-xs">{product.description}</div>
+                        )}
+                      </div>
+                      <span className={`flex-shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${!isOutOfStock ? 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'}`}>
+                        {display.displayQuantity} {display.displayUnit}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                        {formatCurrency(display.displayPrice)} <span className="text-xs text-zinc-400 font-normal">/ {display.displayUnit}</span>
+                      </span>
+                      <div className="flex gap-4">
+                        <button onClick={() => handleStartEdit(product)} className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 cursor-pointer">Edit</button>
+                        <button onClick={() => handleDeleteProduct(product.id)} className="text-xs font-semibold text-rose-600 hover:text-rose-500 cursor-pointer">Delete</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="p-12 text-center text-zinc-400">
+                No products found. Add some products to get started!
+              </div>
+            )}
+          </div>
+
+          {/* ── Desktop Table View ── */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -424,7 +480,6 @@ export default function AdminProductsPage() {
                   </tr>
                 ) : products.length > 0 ? (
                   products.map((product) => {
-                    // Convert internal base units to human-friendly display units
                     const display = getDisplayValues(product.stockQuantity, product.basePrice, product.baseUnit);
                     const isOutOfStock = parseFloat(product.stockQuantity) <= 0;
 
@@ -452,30 +507,14 @@ export default function AdminProductsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              !isOutOfStock
-                                ? 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300'
-                                : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'
-                            }`}
-                          >
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${!isOutOfStock ? 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'}`}>
                             {display.displayQuantity} {display.displayUnit}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-center">
                           <div className="flex justify-center gap-3">
-                            <button
-                              onClick={() => handleStartEdit(product)}
-                              className="text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 cursor-pointer"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteProduct(product.id)}
-                              className="text-xs font-medium text-rose-650 hover:text-rose-555 dark:text-rose-400 cursor-pointer"
-                            >
-                              Delete
-                            </button>
+                            <button onClick={() => handleStartEdit(product)} className="text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 cursor-pointer">Edit</button>
+                            <button onClick={() => handleDeleteProduct(product.id)} className="text-xs font-medium text-rose-600 hover:text-rose-500 dark:text-rose-400 cursor-pointer">Delete</button>
                           </div>
                         </td>
                       </tr>
