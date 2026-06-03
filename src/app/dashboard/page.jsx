@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import OrderTable from '@/components/OrderTable';
-import { formatCurrency } from '@/lib/conversions';
+import { formatCurrency, formatINR } from '@/lib/conversions';
 import Link from 'next/link';
 
 export default function DashboardPage() {
@@ -51,9 +51,9 @@ export default function DashboardPage() {
 
           const totalProducts = products.length;
           const totalOrders = orders.length;
-          const pendingOrders = orders.filter(o => o.status === 'pending').length;
+          const pendingOrders = orders.filter(o => o.status?.toUpperCase() === 'PENDING').length;
           const revenue = orders
-            .filter(o => o.status === 'completed')
+            .filter(o => o.status?.toUpperCase() === 'COMPLETED')
             .reduce((sum, o) => sum + parseFloat(o.totalAmount), 0);
 
           setStats({
@@ -96,10 +96,10 @@ export default function DashboardPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Total Revenue', value: formatCurrency(stats.revenue), icon: '💰', color: 'from-emerald-500/10 to-emerald-600/5 dark:from-emerald-500/5 dark:to-transparent' },
-          { label: 'Total Orders', value: stats.totalOrders, icon: '📦', color: 'from-indigo-500/10 to-indigo-600/5 dark:from-indigo-500/5 dark:to-transparent' },
-          { label: 'Pending Orders', value: stats.pendingOrders, icon: '⏳', color: 'from-amber-500/10 to-amber-600/5 dark:from-amber-500/5 dark:to-transparent' },
-          { label: 'Active Products', value: stats.totalProducts, icon: '🧪', color: 'from-violet-500/10 to-violet-600/5 dark:from-violet-500/5 dark:to-transparent' },
+          { label: 'Total Revenue', value: formatCurrency(stats.revenue), subValue: formatINR(stats.revenue), icon: '💰', color: 'from-emerald-500/10 to-emerald-600/5 dark:from-emerald-500/5 dark:to-transparent' },
+          { label: 'Total Orders', value: stats.totalOrders, subValue: null, icon: '📦', color: 'from-indigo-500/10 to-indigo-600/5 dark:from-indigo-500/5 dark:to-transparent' },
+          { label: 'Pending Orders', value: stats.pendingOrders, subValue: null, icon: '⏳', color: 'from-amber-500/10 to-amber-600/5 dark:from-amber-500/5 dark:to-transparent' },
+          { label: 'Active Products', value: stats.totalProducts, subValue: null, icon: '🧪', color: 'from-violet-500/10 to-violet-600/5 dark:from-violet-500/5 dark:to-transparent' },
         ].map((card, idx) => (
           <div
             key={idx}
@@ -108,6 +108,9 @@ export default function DashboardPage() {
             <div>
               <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{card.label}</p>
               <h4 className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-50">{card.value}</h4>
+              {card.subValue && (
+                <p className="text-xs text-zinc-450 dark:text-zinc-400 font-semibold font-mono mt-0.5">{card.subValue}</p>
+              )}
             </div>
             <span className="text-3xl">{card.icon}</span>
           </div>

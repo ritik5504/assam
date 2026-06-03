@@ -9,14 +9,14 @@ const MOCK_USERS = [
     name: "Dr. Aranya Sharma (Admin)",
     email: "admin@example.com",
     passwordHash: "$2b$10$0PaJEbTW8IcaLKUMIkQwGuGG3NC5oQSckeU5NTsgAs.YOq22viwRu", // admin123
-    role: "admin"
+    role: "ADMIN"
   },
   {
     id: "mock-user-normal",
     name: "Prof. Ritik Singh",
     email: "user@example.com",
     passwordHash: "$2b$10$L55kn2i9P0S7lZt9HvhCnefuoioFduZnW8N9e9eW6KpanzvEaQ2NO", // user123
-    role: "user"
+    role: "USER"
   }
 ];
 

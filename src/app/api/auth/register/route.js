@@ -27,7 +27,7 @@ export async function POST(req) {
           name,
           email,
           password: hashedPassword,
-          role: role || "user",
+          role: (role || "USER").toUpperCase(),
         },
       });
 
@@ -41,7 +41,7 @@ export async function POST(req) {
         id: "mock-user-" + Math.floor(Math.random() * 10000),
         name: name || "New User",
         email,
-        role: role || "user",
+        role: (role || "USER").toUpperCase(),
       }, { status: 201 });
     }
   } catch (error) {

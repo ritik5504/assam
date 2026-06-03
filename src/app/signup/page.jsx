@@ -8,7 +8,7 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('user');
+  const [role, setRole] = useState('USER');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -131,8 +131,8 @@ export default function SignupPage() {
                 onChange={(e) => setRole(e.target.value)}
                 className="mt-1 block w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-2.5 text-zinc-900 dark:text-zinc-100 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm transition-all duration-200 cursor-pointer"
               >
-                <option value="user">Standard User</option>
-                <option value="admin">Administrator</option>
+                <option value="USER">Standard User</option>
+                <option value="ADMIN">Administrator</option>
               </select>
             </div>
           </div>

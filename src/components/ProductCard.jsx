@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency, getDisplayValues } from '../lib/conversions';
+import { formatCurrency, getDisplayValues, formatINR } from '../lib/conversions';
 
 export default function ProductCard({ product, onAddToCart }) {
   const { name, description, basePrice, stockQuantity, baseUnit, image } = product;
@@ -47,13 +47,18 @@ export default function ProductCard({ product, onAddToCart }) {
         </p>
 
         {/* Pricing & Stock */}
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex flex-col gap-1 justify-between">
           <div>
-            <span className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
-              {formatCurrency(display.displayPrice)}
+            <div className="flex flex-wrap items-baseline gap-1.5">
+              <span className="text-xl font-bold text-zinc-900 dark:text-zinc-55">
+                {formatCurrency(display.displayPrice)}
+              </span>
+              <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+                ({formatINR(display.displayPrice)})
+              </span>
               <span className="text-xs font-normal text-zinc-400 dark:text-zinc-500"> / {display.displayUnit}</span>
-            </span>
-            <span className="ml-2 text-xs text-zinc-400 dark:text-zinc-500 block sm:inline">
+            </div>
+            <span className="text-xs text-zinc-400 dark:text-zinc-500 block mt-1">
               {!isOutOfStock ? `${display.displayQuantity} ${display.displayUnit} available` : 'Out of stock'}
             </span>
           </div>

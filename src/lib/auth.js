@@ -9,7 +9,12 @@ const JWT_SECRET = process.env.JWT_SECRET || "assamedchem-super-secret-jwt-key";
  * @returns {string}
  */
 export function signToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+  // Ensure the role payload is standard uppercase (USER / ADMIN)
+  const tokenPayload = {
+    ...payload,
+    role: (payload.role || "USER").toUpperCase()
+  };
+  return jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "7d" });
 }
 
 /**

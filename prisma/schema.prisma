@@ -11,25 +11,25 @@ datasource db {
 
 model User {
   id        String   @id @default(uuid())
-  name      String?
+  name      String
   email     String   @unique
   password  String
-  role      String   @default("user") // "user" | "admin"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      String   @default("USER") // "USER" | "ADMIN"
   orders    Order[]
+  createdAt DateTime @default(now())
 }
 
 model Product {
   id            String      @id @default(uuid())
   name          String
   description   String?
-  baseUnit      String      // "g" | "kg" | "L" | "mL" | "item"
-  basePrice     Decimal     // PostgreSQL Decimal type avoiding precision rounding errors
-  stockQuantity Decimal     // Decimal to support fractional stock like "0.5 kg"
-  image         String?
+  sku           String      @unique
+  dimension     String      // e.g. "Solid", "Liquid", "Gas", or dimensions
+  baseUnit      String      // "g" | "mL" | "item"
+  basePrice     Decimal
+  stockQuantity Decimal
+  image         String?     // Keeps UI visual styling compatibilities
   createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
   orderItems    OrderItem[]
 }
 
@@ -37,19 +37,20 @@ model Order {
   id          String      @id @default(uuid())
   userId      String
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status      String      @default("pending") // "pending" | "completed" | "cancelled"
-  totalAmount Decimal     // Decimal type for financial calculations
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  totalAmount Decimal
+  status      String      @default("PENDING") // "PENDING" | "COMPLETED" | "CANCELLED"
   items       OrderItem[]
+  createdAt   DateTime    @default(now())
 }
 
 model OrderItem {
   id        String   @id @default(uuid())
   orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
+  quantity  Decimal
+  unit      String   // User selected ordering unit (e.g. "kg", "g", "L", "mL")
+  price     Decimal
+  subtotal  Decimal  // Calculated price * quantity
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  quantity  Decimal  // Decimal type for fractional order quantities
-  price     Decimal  // Decimal type for accurate price representation
 }

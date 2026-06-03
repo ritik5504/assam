@@ -2,15 +2,27 @@
 
 import React, { useEffect, useState } from 'react';
 import ProductCard from '@/components/ProductCard';
-import { formatCurrency, convertToBase, getDisplayValues } from '@/lib/conversions';
+import { formatCurrency, convertToBase, getDisplayValues, formatINR } from '@/lib/conversions';
+import { useRouter } from 'next/navigation';
 
 export default function ProductsPage() {
+  const router = useRouter();
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('all');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -83,6 +95,12 @@ export default function ProductsPage() {
 
   const cartTotal = cart.reduce((sum, item) => sum + getCartItemCost(item), 0);
 
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+    const matchesFilter = activeFilter === 'all' || product.baseUnit === activeFilter;
+    return matchesSearch && matchesFilter;
+  });
+
   const handleUpdateCartItemQty = (productId, unit, val) => {
     setCart((prev) =>
       prev.map((item) =>
@@ -123,6 +141,7 @@ export default function ProductsPage() {
           productId: item.product.id,
           quantity: base.quantity,
           price: parseFloat(item.product.basePrice), // price per base unit
+          unit: item.unit,
         };
       });
 
@@ -139,6 +158,9 @@ export default function ProductsPage() {
         showToast('Order placed successfully!', 'success');
         setCart([]);
         fetchProducts();
+        setTimeout(() => {
+          router.push('/orders');
+        }, 1000);
       } else {
         const errData = await response.json();
         showToast(errData.error || 'Failed to place order', 'error');
@@ -181,9 +203,44 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {products.length > 0 ? (
+        {/* Search & Filter Controls */}
+        <div className="flex flex-col md:flex-row gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Search chemicals by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-2.5 pl-10 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 text-sm transition-all duration-200"
+            />
+            <span className="absolute left-3 top-3 text-zinc-400 text-sm">🔍</span>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: 'all', label: 'All Chemicals' },
+              { id: 'g', label: 'Weight (Solids)' },
+              { id: 'mL', label: 'Volume (Liquids)' },
+              { id: 'item', label: 'Count (Packs)' }
+            ].map((filterOpt) => (
+              <button
+                key={filterOpt.id}
+                onClick={() => setActiveFilter(filterOpt.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all duration-200 cursor-pointer ${
+                  activeFilter === filterOpt.id
+                    ? 'bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-50 dark:border-zinc-50 dark:text-zinc-950'
+                    : 'bg-white border-zinc-200 text-zinc-650 hover:bg-zinc-50 hover:text-zinc-900 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-850 dark:hover:text-zinc-200'
+                }`}
+              >
+                {filterOpt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
@@ -193,7 +250,7 @@ export default function ProductsPage() {
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 p-12 text-center text-zinc-400">
-            No products available at the moment.
+            No matching chemical products found. Try modifying your search or filters.
           </div>
         )}
       </div>
@@ -225,7 +282,7 @@ export default function ProductsPage() {
                         <div>
                           <p className="font-semibold text-zinc-900 dark:text-white leading-tight">{item.product.name}</p>
                           <p className="text-xs text-zinc-400 dark:text-zinc-550 mt-1">
-                            {formatCurrency(unitPrice)} / {item.unit}
+                            {formatCurrency(unitPrice)} ({formatINR(unitPrice)}) / {item.unit}
                           </p>
                         </div>
                         <button
@@ -259,18 +316,29 @@ export default function ProductsPage() {
                         ) : (
                           <span className="text-xs text-zinc-400 font-medium px-1 capitalize">{item.unit}</span>
                         )}
-                        <span className="ml-auto font-bold text-zinc-900 dark:text-zinc-50 text-sm">
-                          {formatCurrency(getCartItemCost(item))}
-                        </span>
+                        <div className="ml-auto text-right">
+                          <div className="font-bold text-zinc-900 dark:text-zinc-50 text-sm">
+                            {formatCurrency(getCartItemCost(item))}
+                          </div>
+                          <div className="text-[10px] text-zinc-450 dark:text-zinc-500 font-semibold">
+                            {formatINR(getCartItemCost(item))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 flex items-center justify-between text-base font-bold text-zinc-900 dark:text-white">
-                <span>Total</span>
-                <span>{formatCurrency(cartTotal)}</span>
+              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 space-y-1">
+                <div className="flex items-center justify-between text-base font-bold text-zinc-900 dark:text-white">
+                  <span>Total</span>
+                  <span>{formatCurrency(cartTotal)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+                  <span>Total (INR)</span>
+                  <span>{formatINR(cartTotal)}</span>
+                </div>
               </div>
 
               <button

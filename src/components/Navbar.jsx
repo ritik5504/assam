@@ -43,7 +43,7 @@ export default function Navbar() {
     { href: '/orders', label: 'Orders' },
   ];
 
-  if (user?.role === 'admin') {
+  if (user?.role === 'ADMIN') {
     links.push({ href: '/admin/products', label: 'Admin' });
   }
 

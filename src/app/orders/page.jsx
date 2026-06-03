@@ -52,10 +52,10 @@ export default function OrdersPage() {
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      const response = await fetch('/api/orders', {
-        method: 'PUT',
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, status: newStatus }),
+        body: JSON.stringify({ status: newStatus }),
       });
 
       if (response.ok) {
@@ -104,7 +104,7 @@ export default function OrdersPage() {
 
       <OrderTable
         orders={orders}
-        onUpdateStatus={user.role === 'admin' ? handleUpdateStatus : undefined}
+        onUpdateStatus={user.role === 'ADMIN' ? handleUpdateStatus : undefined}
       />
     </div>
   );

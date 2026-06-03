@@ -140,3 +140,17 @@ export function normalizeProduct(product) {
     stockQuantity: typeof product.stockQuantity === 'string' ? parseFloat(product.stockQuantity) : product.stockQuantity,
   };
 }
+
+/**
+ * Formats a USD value to Indian Rupee (INR).
+ * @param {number} usdValue 
+ * @returns {string}
+ */
+export function formatINR(usdValue) {
+  const inrValue = parseFloat(usdValue) * 83.0; // Conversion rate: 1 USD = 83 INR
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 2,
+  }).format(inrValue);
+}

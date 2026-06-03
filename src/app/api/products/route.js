@@ -7,6 +7,8 @@ const MOCK_PRODUCTS = [
     id: "mock-1",
     name: "Hydrochloric Acid 37% ACS",
     description: "Reagent grade hydrochloric acid suitable for titration and inorganic synthesis.",
+    sku: "CHEM-HCL-37",
+    dimension: "Liquid",
     basePrice: 24.50,
     stockQuantity: 45.0,
     baseUnit: "L",
@@ -16,6 +18,8 @@ const MOCK_PRODUCTS = [
     id: "mock-2",
     name: "Sodium Hydroxide Pellets",
     description: "Anhydrous NaOH pellets, suitable for pH adjustment and general laboratory use.",
+    sku: "CHEM-NAOH-PL",
+    dimension: "Solid",
     basePrice: 18.20,
     stockQuantity: 30.0,
     baseUnit: "kg",
@@ -25,6 +29,8 @@ const MOCK_PRODUCTS = [
     id: "mock-3",
     name: "Ethanol 99% Absolute",
     description: "Pure dehydrated ethanol, ACS reagent grade for extraction and sterilization.",
+    sku: "CHEM-ETOH-99",
+    dimension: "Liquid",
     basePrice: 35.00,
     stockQuantity: 15.5,
     baseUnit: "L",
@@ -34,6 +40,8 @@ const MOCK_PRODUCTS = [
     id: "mock-4",
     name: "Acetone ACS Grade",
     description: "Highly pure acetone solvent, suitable for clearing and organic reactions.",
+    sku: "CHEM-ACET-ACS",
+    dimension: "Liquid",
     basePrice: 22.00,
     stockQuantity: 0.0,
     baseUnit: "L",
@@ -59,7 +67,7 @@ export async function GET(request) {
 export async function POST(request) {
   const userSession = getUserFromRequest(request);
   
-  if (!userSession || userSession.role !== "admin") {
+  if (!userSession || userSession.role !== "ADMIN") { // Check in uppercase
     return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
   }
 
@@ -70,8 +78,8 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { name, description, basePrice, stockQuantity, baseUnit, image } = body;
-  if (!name || basePrice === undefined || stockQuantity === undefined || !baseUnit) {
+  const { name, description, sku, dimension, basePrice, stockQuantity, baseUnit, image } = body;
+  if (!name || !sku || !dimension || basePrice === undefined || stockQuantity === undefined || !baseUnit) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
@@ -80,6 +88,8 @@ export async function POST(request) {
       data: {
         name,
         description,
+        sku,
+        dimension,
         basePrice: parseFloat(basePrice),
         stockQuantity: parseFloat(stockQuantity),
         baseUnit,
@@ -94,6 +104,8 @@ export async function POST(request) {
       id: "mock-product-" + Math.floor(Math.random() * 10000),
       name,
       description,
+      sku,
+      dimension,
       basePrice,
       stockQuantity,
       baseUnit,
@@ -105,7 +117,7 @@ export async function POST(request) {
 export async function PUT(request) {
   const userSession = getUserFromRequest(request);
   
-  if (!userSession || userSession.role !== "admin") {
+  if (!userSession || userSession.role !== "ADMIN") { // Check in uppercase
     return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
   }
 
@@ -116,8 +128,8 @@ export async function PUT(request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { id, name, description, basePrice, stockQuantity, baseUnit, image } = body;
-  if (!id || !name || basePrice === undefined || stockQuantity === undefined || !baseUnit) {
+  const { id, name, description, sku, dimension, basePrice, stockQuantity, baseUnit, image } = body;
+  if (!id || !name || !sku || !dimension || basePrice === undefined || stockQuantity === undefined || !baseUnit) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
@@ -127,6 +139,8 @@ export async function PUT(request) {
       data: {
         name,
         description,
+        sku,
+        dimension,
         basePrice: parseFloat(basePrice),
         stockQuantity: parseFloat(stockQuantity),
         baseUnit,
@@ -141,6 +155,8 @@ export async function PUT(request) {
       id,
       name,
       description,
+      sku,
+      dimension,
       basePrice,
       stockQuantity,
       baseUnit,
@@ -152,7 +168,7 @@ export async function PUT(request) {
 export async function DELETE(request) {
   const userSession = getUserFromRequest(request);
   
-  if (!userSession || userSession.role !== "admin") {
+  if (!userSession || userSession.role !== "ADMIN") { // Check in uppercase
     return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
   }
 
