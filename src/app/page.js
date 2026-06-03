@@ -1,7 +1,29 @@
-import React from 'react';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 export default function Home() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        }
+      } catch (err) {
+        console.error("Failed to load user session:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 font-sans relative overflow-hidden">
       {/* Decorative background gradients */}
@@ -21,19 +43,33 @@ export default function Home() {
           Access high-purity laboratory reagents, chemical supplies, and educational materials. Manage orders, check inventory, and monitor shipments in one secure dashboard.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center min-h-[48px]">
           <Link
             href="/products"
             className="flex h-12 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-750 text-white px-8 font-semibold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all duration-200 w-44"
           >
             Explore Catalog
           </Link>
-          <Link
-            href="/login"
-            className="flex h-12 items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-850 px-8 font-semibold text-zinc-700 dark:text-zinc-300 transition-all duration-200 w-44"
-          >
-            Sign In
-          </Link>
+          
+          {loading ? (
+            <div className="flex h-12 w-44 items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-300 border-t-indigo-600"></div>
+            </div>
+          ) : user ? (
+            <Link
+              href={user.role === 'ADMIN' ? "/dashboard" : "/orders"}
+              className="flex h-12 items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-850 px-8 font-semibold text-zinc-700 dark:text-zinc-300 transition-all duration-200 w-44"
+            >
+              {user.role === 'ADMIN' ? 'Go to Dashboard' : 'My Orders'}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="flex h-12 items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-850 px-8 font-semibold text-zinc-700 dark:text-zinc-300 transition-all duration-200 w-44"
+            >
+              Sign In
+            </Link>
+          )}
         </div>
 
         {/* Feature Cards Grid */}
