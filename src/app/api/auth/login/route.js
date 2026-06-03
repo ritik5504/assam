@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { signToken } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 const MOCK_USERS = [
   {
     id: "mock-user-admin",

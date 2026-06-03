@@ -9,27 +9,46 @@ if (typeof window === 'undefined') {
   neonConfig.webSocketConstructor = ws;
 }
 
-let prisma;
+let prismaInstance = null;
 
-if (process.env.NODE_ENV === 'production') {
+function getPrismaInstance() {
+  if (prismaInstance) return prismaInstance;
+
   const connectionString = process.env.DATABASE_URL;
-  if (connectionString) {
-    const adapter = new PrismaNeon({ connectionString });
-    prisma = new PrismaClient({ adapter });
-  } else {
-    prisma = new PrismaClient();
-  }
-} else {
-  if (!global.prisma) {
-    const connectionString = process.env.DATABASE_URL;
+  
+  if (process.env.NODE_ENV === 'production') {
     if (connectionString) {
       const adapter = new PrismaNeon({ connectionString });
-      global.prisma = new PrismaClient({ adapter });
+      prismaInstance = new PrismaClient({ adapter });
     } else {
-      global.prisma = new PrismaClient();
+      prismaInstance = new PrismaClient();
     }
+  } else {
+    if (!global.prisma) {
+      if (connectionString) {
+        const adapter = new PrismaNeon({ connectionString });
+        global.prisma = new PrismaClient({ adapter });
+      } else {
+        global.prisma = new PrismaClient();
+      }
+    }
+    prismaInstance = global.prisma;
   }
-  prisma = global.prisma;
+  
+  return prismaInstance;
 }
+
+// Export a proxy to achieve lazy-loading of PrismaClient.
+// This prevents build-time crashes when DATABASE_URL is missing or connection fails.
+const prisma = new Proxy({}, {
+  get(target, prop) {
+    const instance = getPrismaInstance();
+    const value = instance[prop];
+    if (typeof value === 'function') {
+      return value.bind(instance);
+    }
+    return value;
+  }
+});
 
 export default prisma;

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getUserFromRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 const MOCK_USERS = [
   {
     id: "mock-user-admin",
